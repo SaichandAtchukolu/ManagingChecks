@@ -29,10 +29,9 @@ jobs:
       - name: Disable Require Branches to be up to date
         if: github.event_name == 'workflow_dispatch'  # Run only on manual trigger
         run: |
-          # Read protection settings from protection.json
           $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
-          # Check if required_pull_request_reviews exists and update settings
+          # Check if required_status_checks exist
           if ($protectionSettings.required_status_checks) {
             $payload = @{
               strict = $false
