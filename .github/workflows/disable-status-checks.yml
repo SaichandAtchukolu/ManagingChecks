@@ -25,16 +25,14 @@ jobs:
 
       - name: Disable Require Status Checks
         run: |
-          jq -e '.required_status_checks' protection.json
-          if [ $? -eq 0 ]; then
+          if jq -e '.required_status_checks' protection.json > /dev/null; then
             ENFORCE_ADMINS=$(jq '.enforce_admins.enabled' protection.json)
             PR_REVIEW=$(jq '.required_pull_request_reviews' protection.json)
             RESTRICTIONS=$(jq '.restrictions' protection.json)
 
             gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" \
               -H "Accept: application/vnd.github+json" \
-              -F required_status_checks.strict=false \
-              -F required_status_checks.contexts='[]' \
+              -F required_status_checks='{"strict": false, "contexts": []}' \
               -F enforce_admins=$ENFORCE_ADMINS \
               -F required_pull_request_reviews="$PR_REVIEW" \
               -F restrictions="$RESTRICTIONS"
