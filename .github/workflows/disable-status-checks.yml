@@ -27,9 +27,10 @@ jobs:
 
       - name: Disable Require Status Checks
         run: |
-          $ENFORCE_ADMINS = (Get-Content protection.json | ConvertFrom-Json).enforce_admins.enabled
-          $PR_REVIEW = (Get-Content protection.json | ConvertFrom-Json | Select-Object -ExpandProperty required_pull_request_reviews | ConvertTo-Json -Compress)
-          $RESTRICTIONS = (Get-Content protection.json | ConvertFrom-Json | Select-Object -ExpandProperty restrictions | ConvertTo-Json -Compress)
+          $protection = Get-Content protection.json | ConvertFrom-Json
+          $enforceAdmins = $protection.enforce_admins.enabled
+          $prReview = $protection.required_pull_request_reviews | ConvertTo-Json -Compress
+          $restrictions = $protection.restrictions | ConvertTo-Json -Compress
 
           gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
             -H "Accept: application/vnd.github+json" `
@@ -38,6 +39,7 @@ jobs:
                 strict = $false
                 contexts = @()
               }
-              enforce_admins = $ENFORCE_ADMINS
-              required_pull_request_reviews = $PR_REVIEW
-              restr
+              enforce_admins = $enforceAdmins
+              required_pull_request_reviews = $prReview
+              restrictions = $restrictions
+            } -Compress)
