@@ -33,7 +33,7 @@ jobs:
           $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
           # Check if required_status_checks exists and update settings
-          if ($protectionSettings.required_status_checks) {
+          if ($protectionSettings.required_status_checks.strict) {
             $payload = @{
               strict = $false
             } | ConvertTo-Json
