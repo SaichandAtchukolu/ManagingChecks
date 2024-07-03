@@ -5,33 +5,25 @@ on:
 
 jobs:
   uncheck-status-checks:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+      
       - name: Install GitHub CLI and jq
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gh jq
+          choco install jq
+          choco install gh
 
       - name: Authenticate GitHub CLI
-        run: echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
+        run: echo ${{ secrets.GH_TOKEN }} | gh auth login --with-token
 
       - name: Fetch Branch Protection Settings
         id: fetch
         run: |
           gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json
-          cat protection.json
+          type protection.json
 
       - name: Uncheck Require Status Checks
-        run: |
-          if jq -e '.required_status_checks' protection.json > /dev/null; then
-            gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Content-Type: application/json" \
-              -d '{"strict": false, "contexts": []}'
-          else
-            echo "No required status checks found to uncheck."
-          fi
+        responseData do several so Contains What  Adjust
