@@ -38,7 +38,7 @@ jobs:
             gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" `
               -H "Accept: application/vnd.github.v3+json" `
               -H "Content-Type: application/json" `
-              -d "{'dismiss_stale_reviews': true, 'require_code_owner_reviews': false, 'required_approving_review_count': 1}"
+              --input protection.json  # Use protection.json as input for PATCH request
           } else {
             echo "No required branches to be up to date found to disable."
           }
