@@ -18,10 +18,18 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y gh
 
       - name: Authenticate GitHub CLI
-        run: gh auth login --with-token <<< "${{ secrets.GH_TOKEN }}"
+        run: echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
 
-      - name: Disable require status checks
+      - name: Get Current Branch Protection Settings
+        id: current-settings
         run: |
-          gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection" \
-            -F required_status_checks.required=false \
-            -F required_status_checks.contexts='[]'
+          gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json || echo '{"required_status_checks": null}' > protection.json
+        continue-on-error: true
+
+      - name: Update Branch Protection
+        if: steps.current-settings.outputs.status == 200
+        run: |
+          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" \
+            -F required_status_checks.strict=false \
+            -F required_status_checks.contexts='[]' \
+            -F enforce_admin
