@@ -5,7 +5,7 @@ on:
 
 jobs:
   disable-branch-up-to-date:
-    runs-on: windows-latest  # Specify the Windows agent
+    runs-on: windows-latest  # Specify the Windows agents
 
     steps:
       - name: Checkout repository
