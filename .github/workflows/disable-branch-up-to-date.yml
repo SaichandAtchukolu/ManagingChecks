@@ -29,13 +29,11 @@ jobs:
       - name: Disable Require Branches to be up to date
         if: github.event_name == 'workflow_dispatch'  # Run only on manual trigger
         run: |
-          $protectionSettings = Get-Content protection.json | ConvertFrom-Json
-          $enforceAdmins = $protectionSettings.enforce_admins.enabled
-          $prReview = $protectionSettings.required_pull_request_reviews
-          $restrictions = $protectionSettings.restrictions
+          # Read protection settings from protection.json
+          $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
-          if ($prReview) {
-            # Construct the JSON payload for PATCH request
+          # Check if required_pull_request_reviews exist and update settings
+          if ($protectionSettings.required_pull_request_reviews) {
             $payload = @{
               dismiss_stale_reviews = $true
               require_code_owner_reviews = $false
@@ -46,7 +44,7 @@ jobs:
             gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" `
               -H "Accept: application/vnd.github.v3+json" `
               -H "Content-Type: application/json" `
-              --input $payload  # Use $payload as input for PATCH request
+              --input $payload
           } else {
             echo "No required branches to be up to date found to disable."
           }
