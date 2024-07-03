@@ -29,19 +29,24 @@ jobs:
         run: |
           $protection = Get-Content protection.json | ConvertFrom-Json
           $enforceAdmins = $protection.enforce_admins.enabled
-          $prReview = $protection.required_pull_request_reviews | ConvertTo-Json -Compress
-          $restrictions = $protection.restrictions | ConvertTo-Json -Compress
+          $prReview = $protection.required_pull_request_reviews
+          $restrictions = $protection.restrictions
 
           $jsonInput = @{
               required_status_checks = @{
                 strict = $false
                 contexts = @()
               }
-              enforce_admins = $enforceAdmins
+              enforce_admins = @{
+                enabled = $enforceAdmins
+              }
               required_pull_request_reviews = $prReview
               restrictions = $restrictions
           } | ConvertTo-Json -Compress
 
+          Write-Host "Updating branch protection with:"
+          Write-Host $jsonInput
+
           gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
             -H "Accept: application/vnd.github+json" `
-            -F "data=$jsonInput"
+            --input $jsonInput
