@@ -42,4 +42,17 @@ jobs:
 
             try {
               # Update branch protection settings using the temporary file
-              gh api -X PATCH "repos/${{ github.repository }}/branches/mai
+              gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" `
+                -H "Accept: application/vnd.github.v3+json" `
+                -H "Content-Type: application/json" `
+                --input $tempPayloadPath
+            } catch {
+              Write-Host "Error updating branch protection settings: $_"
+              exit 1
+            } finally {
+              # Clean up the temporary file
+              Remove-Item $tempPayloadPath
+            }
+          } else {
+            echo "No required branches to be up to date found to disable."
+          }
