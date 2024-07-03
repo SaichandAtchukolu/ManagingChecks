@@ -32,8 +32,8 @@ jobs:
           # Read protection settings from protection.json
           $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
-          # Check if required_status_checks exists and update settings
-          if ($protectionSettings.required_status_checks) {
+          # Check if required_pull_request_reviews exists and update settings
+          if ($protectionSettings.required_status_checks.strict) {
             $payload = @{
               strict = $false
             } | ConvertTo-Json
@@ -45,9 +45,4 @@ jobs:
                 -H "Content-Type: application/json" `
                 --input $payload
             } catch {
-              Write-Host "Error updating branch protection settings: $_"
-              exit 1
-            }
-          } else {
-            echo "No required branches to be up to date found to disable."
-          }
+              Write-Host "Error up
