@@ -32,9 +32,7 @@ jobs:
           $prReview = $protection.required_pull_request_reviews | ConvertTo-Json -Compress
           $restrictions = $protection.restrictions | ConvertTo-Json -Compress
 
-          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
-            -H "Accept: application/vnd.github+json" `
-            --input (ConvertTo-Json @{
+          $jsonInput = @{
               required_status_checks = @{
                 strict = $false
                 contexts = @()
@@ -42,4 +40,8 @@ jobs:
               enforce_admins = $enforceAdmins
               required_pull_request_reviews = $prReview
               restrictions = $restrictions
-            } -Compress)
+          } | ConvertTo-Json -Compress
+
+          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
+            -H "Accept: application/vnd.github+json" `
+            -F "data=$jsonInput"
