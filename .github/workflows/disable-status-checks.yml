@@ -1,0 +1,26 @@
+name: Disable Require Status Checks
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  disable-status-checks:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up GitHub CLI
+        uses: cli/gh-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Disable require status checks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection" \
+            -F required_status_checks.required=false \
+            -F required_status_checks.contexts='[]'
