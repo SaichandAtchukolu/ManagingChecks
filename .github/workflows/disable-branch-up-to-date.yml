@@ -26,4 +26,19 @@ jobs:
           gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json
           Get-Content protection.json
 
-      - name: Disable Require Branches to be up to d
+      - name: Disable Require Branches to be up to date
+        if: github.event_name == 'workflow_dispatch'  # Run only on manual trigger
+        run: |
+          $enforceAdmins = (Get-Content protection.json | ConvertFrom-Json).enforce_admins.enabled
+          $prReview = (Get-Content protection.json | ConvertFrom-Json).required_pull_request_reviews
+          $restrictions = (Get-Content protection.json | ConvertFrom-Json).restrictions
+
+          if ($prReview) {
+            gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" `
+              -H "Accept: application/vnd.github.v3+json" `
+              -H "Content-Type: application/json" `
+              -d "{'dismiss_stale_reviews': true, 'require_code_owner_reviews': false, 'required_approving_review_count': 1}"
+          }
+          else {
+            echo "No required branches to be up to date found to disable."
+          }
