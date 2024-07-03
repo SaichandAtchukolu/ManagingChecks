@@ -33,16 +33,14 @@ jobs:
           $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
           # Check if required_pull_request_reviews exist and update settings
-          if ($protectionSettings.required_pull_request_reviews) {
+          if ($protectionSettings.required_status_checks.strict) {
             $payload = @{
-              dismiss_stale_reviews = $true
-              require_code_owner_reviews = $false
-              required_approving_review_count = 1
+              strict = $false
             } | ConvertTo-Json
 
             try {
               # Update branch protection settings
-              gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" `
+              gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" `
                 -H "Accept: application/vnd.github.v3+json" `
                 -H "Content-Type: application/json" `
                 --input $payload
