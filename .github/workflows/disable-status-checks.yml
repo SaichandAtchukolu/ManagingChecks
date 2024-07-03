@@ -5,14 +5,16 @@ on:
 
 jobs:
   disable-status-checks:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install GitHub CLI and jq
-        run: sudo apt-get update && sudo apt-get install -y gh jq
+      - name: Install GitHub CLI
+        run: |
+          Invoke-WebRequest -Uri https://github.com/cli/cli/releases/download/v2.41.0/gh_2.41.0_windows_amd64.msi -OutFile gh-cli.msi
+          Start-Process msiexec.exe -ArgumentList '/i', 'gh-cli.msi', '/quiet', '/norestart' -Wait
 
       - name: Authenticate GitHub CLI
         run: echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
@@ -21,25 +23,21 @@ jobs:
         id: fetch
         run: |
           gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json
-          cat protection.json
-
-      - name: Print Debug Info
-        run: |
-          jq '.enforce_admins.enabled' protection.json
-          jq '.required_pull_request_reviews' protection.json
-          jq '.restrictions' protection.json
+          Get-Content protection.json
 
       - name: Disable Require Status Checks
         run: |
-          if jq -e '.required_status_checks' protection.json > /dev/null; then
-            ENFORCE_ADMINS=$(jq '.enforce_admins.enabled' protection.json)
-            PR_REVIEW=$(jq '.required_pull_request_reviews' protection.json)
-            RESTRICTIONS=$(jq '.restrictions' protection.json)
+          $ENFORCE_ADMINS = (Get-Content protection.json | ConvertFrom-Json).enforce_admins.enabled
+          $PR_REVIEW = (Get-Content protection.json | ConvertFrom-Json | Select-Object -ExpandProperty required_pull_request_reviews | ConvertTo-Json -Compress)
+          $RESTRICTIONS = (Get-Content protection.json | ConvertFrom-Json | Select-Object -ExpandProperty restrictions | ConvertTo-Json -Compress)
 
-            gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" \
-              -H "Accept: application/vnd.github+json" \
-              --input <(jq -n --argjson admins "$ENFORCE_ADMINS" --argjson reviews "$PR_REVIEW" --argjson restrict "$RESTRICTIONS" \
-                '{required_status_checks: {strict: false, contexts: []}, enforce_admins: $admins, required_pull_request_reviews: $reviews, restrictions: $restrict}')
-          else
-            echo "No required status checks found to disable."
-          fi
+          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
+            -H "Accept: application/vnd.github+json" `
+            --input (ConvertTo-Json @{
+              required_status_checks = @{
+                strict = $false
+                contexts = @()
+              }
+              enforce_admins = $ENFORCE_ADMINS
+              required_pull_request_reviews = $PR_REVIEW
+              restr
