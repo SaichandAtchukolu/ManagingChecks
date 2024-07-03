@@ -29,16 +29,24 @@ jobs:
       - name: Disable Require Branches to be up to date
         if: github.event_name == 'workflow_dispatch'  # Run only on manual trigger
         run: |
-          $protectionSettings = Get-Content protection.json | ConvertFrom-Json
-          $enforceAdmins = $protectionSettings.enforce_admins.enabled
-          $prReview = $protectionSettings.required_pull_request_reviews
-          $restrictions = $protectionSettings.restrictions
+          # Read protection settings from protection.json
+          $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
-          if ($prReview) {
-            gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" `
-              -H "Accept: application/vnd.github.v3+json" `
-              -H "Content-Type: application/json" `
-              --input protection.json  # Use protection.json as input for PATCH request
+          # Check if required_status_checks exist and update settings
+          if ($protectionSettings.required_status_checks) {
+            # Create payload directly in JSON format
+            $payload = '{"strict": false}' | ConvertTo-Json -Compress
+
+            try {
+              # Update branch protection settings
+              gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" `
+                -H "Accept: application/vnd.github.v3+json" `
+                -H "Content-Type: application/json" `
+                --input - <<< $payload
+            } catch {
+              Write-Host "Error updating branch protection settings: $_"
+              exit 1
+            }
           } else {
             echo "No required branches to be up to date found to disable."
           }
