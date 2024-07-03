@@ -34,19 +34,12 @@ jobs:
 
           # Check if required_status_checks exist and update settings
           if ($protectionSettings.required_status_checks) {
-            # Create payload directly in JSON format
-            $payload = '{"strict": false}' | ConvertTo-Json -Compress
+            # Create a temporary file to hold the payload
+            $tempPayloadPath = [System.IO.Path]::GetTempFileName()
+
+            # Write payload directly to the temporary file
+            '{"strict": false}' | Out-File -FilePath $tempPayloadPath -Encoding UTF8
 
             try {
-              # Update branch protection settings
-              gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" `
-                -H "Accept: application/vnd.github.v3+json" `
-                -H "Content-Type: application/json" `
-                --input - <<< $payload
-            } catch {
-              Write-Host "Error updating branch protection settings: $_"
-              exit 1
-            }
-          } else {
-            echo "No required branches to be up to date found to disable."
-          }
+              # Update branch protection settings using the temporary file
+              gh api -X PATCH "repos/${{ github.repository }}/branches/mai
