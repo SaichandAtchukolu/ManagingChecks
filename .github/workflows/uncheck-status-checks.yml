@@ -28,10 +28,6 @@ jobs:
       - name: Uncheck Require Status Checks
         run: |
           if jq -e '.required_status_checks' protection.json > /dev/null; then
-            ENFORCE_ADMINS=$(jq '.enforce_admins.enabled' protection.json)
-            PR_REVIEW=$(jq '.required_pull_request_reviews' protection.json)
-            RESTRICTIONS=$(jq '.restrictions' protection.json)
-
             gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Content-Type: application/json" \
