@@ -28,7 +28,6 @@ jobs:
       - name: Disable Require Status Checks
         run: |
           $protection = Get-Content protection.json | ConvertFrom-Json
-          $enforceAdmins = $protection.enforce_admins.enabled
           $prReview = $protection.required_pull_request_reviews
           $restrictions = $protection.restrictions
 
@@ -37,9 +36,7 @@ jobs:
                 strict = $false
                 contexts = @()
               }
-              enforce_admins = @{
-                enabled = $enforceAdmins
-              }
+              enforce_admins = $false  # Ensure enforce_admins is set to false as a boolean
               required_pull_request_reviews = $prReview
               restrictions = $restrictions
           } | ConvertTo-Json -Compress
