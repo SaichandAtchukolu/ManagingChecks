@@ -36,7 +36,7 @@ jobs:
                 strict = $false
                 contexts = @()
               }
-              enforce_admins = $false  # Ensure enforce_admins is set to false as a boolean
+              enforce_admins = $false
               required_pull_request_reviews = $prReview
               restrictions = $restrictions
           } | ConvertTo-Json -Compress
@@ -47,8 +47,11 @@ jobs:
           Write-Host "Updating branch protection with:"
           Get-Content $tempFile
 
-          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
+          $response = gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
             -H "Accept: application/vnd.github+json" `
             --input $tempFile
+
+          Write-Host "GitHub API Response:"
+          Write-Host $response
 
           Remove-Item -Path $tempFile
