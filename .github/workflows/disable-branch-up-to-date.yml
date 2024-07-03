@@ -5,7 +5,7 @@ on:
 
 jobs:
   disable-branch-up-to-date:
-    runs-on: windows-latest  # Specify the Windows agents
+    runs-on: windows-latest  # Specify the Windows agent
 
     steps:
       - name: Checkout repository
@@ -32,7 +32,7 @@ jobs:
           # Read protection settings from protection.json
           $protectionSettings = Get-Content -Raw protection.json | ConvertFrom-Json
 
-          # Check if required_status_checks exists and update settings
+          # Check if required_pull_request_reviews exists and update settings
           if ($protectionSettings.required_status_checks) {
             $payload = @{
               strict = $false
@@ -46,7 +46,7 @@ jobs:
                 --input $payload
             } catch {
               Write-Host "Error updating branch protection settings: $_"
-              exit 1  # Exit with error if update fails
+              exit 1
             }
           } else {
             echo "No required branches to be up to date found to disable."
