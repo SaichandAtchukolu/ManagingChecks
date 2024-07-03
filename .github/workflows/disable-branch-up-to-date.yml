@@ -12,7 +12,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install GitHub CLI and jq
-        run: sudo apt-get update && sudo apt-get install -y gh jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh jq
 
       - name: Authenticate GitHub CLI
         run: echo "${{ secrets.GH_TOKEN }}" | gh auth login --with-token
@@ -25,15 +27,15 @@ jobs:
 
       - name: Disable Require Branches to be up to date
         run: |
-          if jq -e '.required_status_checks' protection.json > /dev/null; then
+          if jq -e '.required_pull_request_reviews' protection.json > /dev/null; then
             ENFORCE_ADMINS=$(jq '.enforce_admins.enabled' protection.json)
             PR_REVIEW=$(jq '.required_pull_request_reviews' protection.json)
             RESTRICTIONS=$(jq '.restrictions' protection.json)
 
-            gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_status_checks" \
+            gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection/required_pull_request_reviews" \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Content-Type: application/json" \
-              -d '{"include_admins":'$ENFORCE_ADMINS', "required_pull_request_reviews":'$PR_REVIEW', "restrictions":'$RESTRICTIONS'}'
+              -d '{"dismiss_stale_reviews": true, "require_code_owner_reviews": false, "required_approving_review_count": 1}'
           else
             echo "No required branches to be up to date found to disable."
           fi
