@@ -1,13 +1,15 @@
 name: Disable Require Status Checks
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:  # Allows manual triggering
+  # You can also trigger on other events like push or schedule
+  # schedule:
+  #   - cron: "0 0 * * 1"  # Runs every Monday at 00:00 UTC
 
 jobs:
   disable-status-checks:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -15,11 +17,11 @@ jobs:
       - name: Set up GitHub CLI
         uses: cli/gh-action@v2
         with:
-          token: ${{ secrets.Manage_Check }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Disable require status checks
         env:
-          GH_TOKEN: ${{ secrets.Manage_Check }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection" \
             -F required_status_checks.required=false \
