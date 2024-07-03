@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install GitHub CLI
+      - name: Install GitHub CLI and jq
         run: sudo apt-get update && sudo apt-get install -y gh jq
 
       - name: Authenticate GitHub CLI
@@ -23,6 +23,12 @@ jobs:
           gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json
           cat protection.json
 
+      - name: Print Debug Info
+        run: |
+          jq '.enforce_admins.enabled' protection.json
+          jq '.required_pull_request_reviews' protection.json
+          jq '.restrictions' protection.json
+
       - name: Disable Require Status Checks
         run: |
           if jq -e '.required_status_checks' protection.json > /dev/null; then
@@ -32,10 +38,8 @@ jobs:
 
             gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" \
               -H "Accept: application/vnd.github+json" \
-              -F required_status_checks='{"strict": false, "contexts": []}' \
-              -F enforce_admins=$ENFORCE_ADMINS \
-              -F required_pull_request_reviews="$PR_REVIEW" \
-              -F restrictions="$RESTRICTIONS"
+              --input <(jq -n --argjson admins "$ENFORCE_ADMINS" --argjson reviews "$PR_REVIEW" --argjson restrict "$RESTRICTIONS" \
+                '{required_status_checks: {strict: false, contexts: []}, enforce_admins: $admins, required_pull_request_reviews: $reviews, restrictions: $restrict}')
           else
             echo "No required status checks found to disable."
           fi
