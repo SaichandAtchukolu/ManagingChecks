@@ -23,6 +23,9 @@ jobs:
         id: fetch
         run: gh api "repos/${{ github.repository }}/branches/main/protection" > protection.json
 
+      - name: Debug - Display Protection Settings
+        run: Get-Content protection.json
+
       - name: Disable Require Status Checks
         run: |
           $protection = Get-Content protection.json | ConvertFrom-Json
@@ -32,6 +35,9 @@ jobs:
                 strict = $false
                 contexts = @()
               }
+              enforce_admins = $protection.enforce_admins
+              required_pull_request_reviews = $protection.required_pull_request_reviews
+              restrictions = $protection.restrictions
           } | ConvertTo-Json -Compress
 
           $tempFile = New-TemporaryFile
@@ -40,11 +46,9 @@ jobs:
           Write-Host "Updating branch protection with:"
           Get-Content $tempFile
 
-          $response = gh api -X PATCH "repos/${{ github.repository }}/branches/main/protection" `
-            -H "Accept: application/vnd.github.v3+json" `
+          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
+            -H "Accept: application/vnd.github+json" `
             --input $tempFile
 
-          Write-Host "GitHub API Response:"
-          Write-Host $response
-
+          # Clean up
           Remove-Item -Path $tempFile
