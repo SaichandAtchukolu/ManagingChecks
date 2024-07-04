@@ -37,9 +37,7 @@ jobs:
                   strict = $false
                   contexts = @()
               }
-              enforce_admins = @{
-                  enabled = $false
-              }
+              enforce_admins = $false
               required_pull_request_reviews = $protection.required_pull_request_reviews
               restrictions = $protection.restrictions
           } | ConvertTo-Json -Compress
