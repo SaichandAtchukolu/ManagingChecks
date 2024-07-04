@@ -1,10 +1,10 @@
-name: Disable Require Status Checks
+name: Remove Status Checks and Uncheck Requirement
 
 on:
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  disable-status-checks:
+  update-branch-protection:
     runs-on: windows-latest
 
     steps:
@@ -26,18 +26,15 @@ jobs:
       - name: Debug - Display Protection Settings
         run: Get-Content protection.json
 
-      - name: Disable Require Status Checks
+      - name: Uncheck Require Status Checks and Remove Them
         run: |
           # Read the current branch protection settings
           $protection = Get-Content protection.json | ConvertFrom-Json
 
-          # Construct the JSON input to disable required status checks
+          # Create JSON input to uncheck and remove status checks
           $jsonInput = @{
-              required_status_checks = @{
-                  strict = $false
-                  contexts = @()
-              }
-              enforce_admins = $false
+              required_status_checks = $null
+              enforce_admins = $protection.enforce_admins.enabled
               required_pull_request_reviews = $protection.required_pull_request_reviews
               restrictions = $protection.restrictions
           } | ConvertTo-Json -Compress
