@@ -49,4 +49,13 @@ jobs:
           Set-Content -Path $tempFile -Value $jsonInput
 
           # Display the JSON input for debugging purposes
-          Write-Host "Updating branch 
+          Write-Host "Updating branch protection with:"
+          Get-Content $tempFile
+
+          # Update the branch protection settings
+          gh api -X PUT "repos/${{ github.repository }}/branches/main/protection" `
+            -H "Accept: application/vnd.github+json" `
+            --input $tempFile
+
+          # Clean up the temporary file
+          Remove-Item -Path $tempFile
